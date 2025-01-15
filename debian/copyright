@@ -1,0 +1,11 @@
+All files in this package are licensed under the GPL, version 2 or
+later.
+
+Copyrights as follows:
+
+debian/kdump-config, debian/kdump-config.8, debian/kdump-tools.5:
+ * Copyright (C) 2007-2009 Hewlett-Packard Development Company, L.P.
+   All rights reserved.
+
+On Debian GNU systems, the complete text of the GNU General Public
+License version 2 can be found in `/usr/share/common-licenses/GPL-2'.

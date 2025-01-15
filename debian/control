@@ -1,0 +1,36 @@
+Source: kdump-tools
+Section: devel
+Priority: optional
+Maintainer: Debian Kdump <team+kdump@tracker.debian.org>
+Uploaders: dann frazier <dannf@debian.org>,
+           Thadeu Lima de Souza Cascardo <cascardo@debian.org>
+Standards-Version: 4.5.1
+Build-Depends: debhelper (>= 9~),
+               po-debconf,
+               shellcheck <!nocheck>
+Vcs-Git: https://salsa.debian.org/debian/kdump-tools.git
+Vcs-Browser: https://salsa.debian.org/debian/kdump-tools
+Rules-Requires-Root: no
+
+Package: kdump-tools
+Architecture: amd64 arm64 armel armhf i386 ia64 powerpc ppc64el s390x x32
+Pre-Depends: ${misc:Pre-Depends}
+Depends: bsdextrautils | bsdmainutils,
+         busybox | busybox-static,
+         debconf,
+         file,
+         linux-base,
+         lsb-base (>= 3.0-6),
+         ucf,
+         makedumpfile (>=1:1.7.0-1+velinux2),
+         ${dist:Depends},
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: initramfs-tools-core, crash (>=8.0.0+velinux2)
+Description: scripts and tools for automating kdump (Linux crash dumps)
+ kdump-tools provides an init script and a configuration script for
+ automating the use of kdump.  It uses the makedumpfile utility to
+ reduce the size of the /proc/vmcore file based on user preferences.
+ .
+ After installing, please see /usr/share/doc/kdump-tools/README.Debian
+ for information on enabling and configuring kdump.

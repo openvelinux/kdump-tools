@@ -1,0 +1,1 @@
+GRUB_CMDLINE_LINUX_DEFAULT="$GRUB_CMDLINE_LINUX_DEFAULT crashkernel=128M,low crashkernel=512M,high"

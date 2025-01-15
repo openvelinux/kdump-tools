@@ -1,0 +1,17 @@
+[Unit]
+Description=Kernel crash dump capture service
+DefaultDependencies=no
+After=local-fs.target
+After=networking.service
+Before=basic.target
+
+[Service]
+Type=oneshot
+StandardOutput=journal+console
+EnvironmentFile=/etc/default/kdump-tools
+ExecStart=/etc/init.d/kdump-tools start
+ExecStop=/etc/init.d/kdump-tools stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=basic.target

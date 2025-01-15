@@ -1,0 +1,68 @@
+#!/usr/bin/make -f
+
+include /usr/share/dpkg/default.mk
+
+ifeq ($(shell $(call dpkg_vendor_derives_from,Ubuntu)),yes)
+	SUBSTVARS = -Vdist:Depends="kexec-tools (>= 1:2.0.10-2)"
+else
+	SUBSTVARS = -Vdist:Depends="kexec-tools (>=1:2.0.23+velinux2)"
+endif
+
+KDUMP_CMDLINE_APPEND = reset_devices systemd.unit=kdump-tools-dump.service \
+		       edac_core.edac_report=off edac_report=off mce=off   \
+		       hest_disable init=\/var\/lib\/kdump\/dump-panic \
+		       numa=off panic=1
+ifeq ($(DEB_HOST_ARCH),arm64)
+	KDUMP_CMDLINE_APPEND += nr_cpus=1
+else ifeq ($(DEB_HOST_ARCH),ppc64el)
+	KDUMP_CMDLINE_APPEND += maxcpus=1 irqpoll noirqdistrib nousb
+else
+	KDUMP_CMDLINE_APPEND += nr_cpus=1 irqpoll usbcore.nousb
+endif
+
+%:
+	dh $@
+
+override_dh_gencontrol:
+	dh_gencontrol -- $(SUBSTVARS)
+
+kdump_cmdline_insert = sed "s/@KDUMP_CMDLINE_APPEND@/$(KDUMP_CMDLINE_APPEND)/" < $< > $@
+build_init_image:
+	$(MAKE)
+	$(MAKE) install
+
+debian/kdump-config: debian/kdump-config.in
+	$(kdump_cmdline_insert)
+debian/kdump-tools.conf: debian/kdump-tools.conf.in
+	$(kdump_cmdline_insert)
+debian/kdump-tools.5: debian/kdump-tools.5.in
+	$(kdump_cmdline_insert)
+
+override_dh_install: build_init_image debian/kdump-config debian/kdump-tools.conf debian/kdump-tools.5
+	dh_install
+	dh_installdirs
+	install -D -m 755 debian/kernel-postinst-generate-initrd debian/kdump-tools/etc/kernel/postinst.d/kdump-tools
+	install -D -m 755 debian/kernel-postrm-delete-initrd debian/kdump-tools/etc/kernel/postrm.d/kdump-tools
+	install -D -m 755 debian/initramfs.hook debian/kdump-tools/usr/share/initramfs-tools/hooks/kdump-tools
+	install -D -m 755 debian/initramfs.local-bottom \
+debian/kdump-tools/usr/share/initramfs-tools/scripts/local-bottom/kdump-sysctl
+	[ ! -f debian/kdump-tools.grub.$(DEB_HOST_ARCH) ] || \
+		install -D -m 644 debian/kdump-tools.grub.$(DEB_HOST_ARCH) debian/kdump-tools/etc/default/grub.d/kdump-tools.cfg
+	[ -f debian/kdump-tools.grub.$(DEB_HOST_ARCH) ] || \
+		install -D -m 644 debian/kdump-tools.grub.default debian/kdump-tools/etc/default/grub.d/kdump-tools.cfg
+
+override_dh_installdeb:
+	rm -f debian/kdump-tools.maintscript
+	[ ! -f debian/kdump-tools.maintscript.$(DEB_HOST_ARCH) ] || \
+		ln -s kdump-tools.maintscript.$(DEB_HOST_ARCH) \
+		debian/kdump-tools.maintscript
+	[ -h debian/kdump-tools.maintscript ] || \
+		ln -s kdump-tools.maintscript.default \
+		debian/kdump-tools.maintscript
+	dh_installdeb
+
+override_dh_auto_clean:
+	rm -f debian/kdump-tools.maintscript
+	rm -f debian/kdump-config debian/kdump-tools.conf debian/kdump-tools.5
+	rm -f dump-panic
+	dh_auto_clean

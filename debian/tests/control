@@ -1,0 +1,3 @@
+Tests: crash
+Restrictions: breaks-testbed, needs-root, isolation-machine, needs-reboot
+Depends: file, initramfs-tools-core, @
